@@ -103,7 +103,6 @@ class Config {
      */
     protected function get() {
 
-		$value = '';
 		$map = func_get_args();
         $depth = func_num_args();
         
@@ -128,7 +127,8 @@ class Config {
         $find_key = array_shift($tree);
         
         foreach($iterator as $key => &$value) {
-            if($key === $find_key) {                
+            if($key === $find_key) {          
+                
                 # We are at the base of what we want
                 if(!isset($tree[0])) {
                     return $value;
@@ -140,5 +140,16 @@ class Config {
         }
         
         return null;        
+    }
+    
+    
+    protected function findTokens($string) {
+        
+    }
+    
+    
+    public function replaceTokens(array $tokens = [], $string) {
+        
+        
     }
 }
