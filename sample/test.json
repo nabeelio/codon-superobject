@@ -1,0 +1,31 @@
+{
+    "global" : {
+        "env" : "dev"
+    },
+    "php" : {
+        "ini_set" : {
+            "display_errors" : "on"
+        }
+    },
+    "testApplication": {
+        "id" : "testapp-${global.env}",
+        "baseURL" : "http://testsite.com",
+        "cdn_id": "${testApplication.id}-cdn",
+        "cdn": {
+            "cdn001": "cdn-001.${application.cdn_id}.cdn.com",
+            "cdn002": "cdn-002.${application.cdn_id}.cdn.com"
+        },
+        "configuration": {
+            "database": {
+                "host": "localhost",
+                "user": "aUsername",
+                "pass": "aPassword",
+                "name": "someDatabase"
+            },
+            "memcache" : {
+                "prefix" : "${testApplication.id}_",
+                "servers" : ["127.0.0.1:11211"]
+            }
+        }
+    }
+}
