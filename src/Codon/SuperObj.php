@@ -176,7 +176,7 @@ class SuperObj extends \ArrayObject {
 	 * @param array $tree
 	 * @return mixed Array with 0: iterator, 1: value (reference)
 	 */
-	protected function findNode(\RecursiveArrayIterator &$iterator, $tree = []) {
+	protected function findNode(\RecursiveArrayIterator $iterator, $tree = []) {
 
 		$find_key = array_shift($tree);
 
@@ -205,7 +205,7 @@ class SuperObj extends \ArrayObject {
 	 * @param array $tree
 	 * @return mixed|null
 	 */
-	protected function findValue(\RecursiveArrayIterator &$node, $tree = []) {
+	protected function findValue(\RecursiveArrayIterator $node, $tree = []) {
 
 		# Find the node we are looking for, and return the iterator and value
 		list($node, $node_value) = $this->findNode($node, $tree);
@@ -235,7 +235,7 @@ class SuperObj extends \ArrayObject {
 			# This is a bug in PHP or something - if $nodeValue is an array, then the
 			# offsetSet() doesn't "stick" the new values, since they're not passed
 			# into the iterator by reference. So this is a work-around
-			if(isset($node_value[$curr_key])) {
+			if(is_array($node_value) && isset($node_value[$curr_key])) {
 				$node_value[$curr_key] = $curr_val;
 			}
 

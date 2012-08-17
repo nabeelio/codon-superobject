@@ -1,0 +1,6 @@
+#!/bin/bash
+
+phpunit \
+  --colors \
+  --testdox-text results.txt \
+  .
