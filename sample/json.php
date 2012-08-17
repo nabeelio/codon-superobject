@@ -13,24 +13,16 @@ $instance = \Codon\Config::loadDataJSON(file_get_contents(THIS_PATH . '/../tests
 #var_dump($value);
 
 echo "=========================\n";
-echo "==== all paths ==========\n";
-echo "=========================\n";
-
-$value = $instance->get('paths');
-#var_dump($value);
-
-echo "=========================\n";
-echo "==== temp path ==========\n";
-echo "=========================\n";
-#$value = $instance->get('paths', 'temp_path');
-#var_dump($value);
-
-
-echo "=========================\n";
 echo "==== array values =======\n";
 echo "=========================\n";
 
 $value = $instance->get(['testApplication', 'cdn']);
+echo 'RETURNED VALUES: '; var_dump($value);
+
+#$value = $instance->get(['testApplication', 'cdn.0']);
+#echo 'RETURNED VALUES: '; var_dump($value);
+
+$value = $instance->get(['testApplication', 'systems']);
 echo 'RETURNED VALUES: '; var_dump($value);
 
 

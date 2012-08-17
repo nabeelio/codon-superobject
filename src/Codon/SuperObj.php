@@ -101,7 +101,7 @@ class SuperObj extends \ArrayObject {
         if(isset($this->_cache[$cached_name]))
             return $this->_cache[$cached_name];
 
-		$value = $this->findValue($this->getIterator(), $tree, $cached_name);
+		$value = $this->findValue($this->getIterator(), $tree);
 
 		$this->_cache[$cached_name] = $value;
 
@@ -115,23 +115,40 @@ class SuperObj extends \ArrayObject {
 	 * @param array $tree
 	 * @return \RecursiveArrayIterator|null
 	 */
-	protected function &findValue(\RecursiveArrayIterator &$iterator, &$tree = []) {
+	protected function findValue(\RecursiveArrayIterator &$iterator, $tree = []) {
 
         $find_key = array_shift($tree);
 
         foreach($iterator as $key => &$value) {
             if($key === $find_key) {
-				# found what we want
+
+				# We've gotten down to the node that we want ($tree is now null)
                 if(!isset($tree[0])) {
 
+					# The node we want has children, parse through the leafs
+					# and parse any tokens that are present in them
                     if($iterator->hasChildren()) {
-						if(is_array($value)) { # returning an array
-							foreach($value as &$v) {
-								$v = $this->parseTokens($v);
+
+						$rec_ii = new \RecursiveIteratorIterator (
+							$iterator->getChildren(),
+							\RecursiveIteratorIterator::LEAVES_ONLY
+						);
+
+						iterator_apply($rec_ii, function(\Iterator &$iterator, &$val){
+
+							$curr_key = $iterator->key();
+							$curr_val = $this->parseTokens($iterator->current());
+
+							$iterator->offsetSet($curr_key, $curr_val);
+
+							# This is a bug in PHP or something - if $val is an array of strings, then the
+							# offsetSet() doesn't "stick" the new values, so this is a work-around
+							if(isset($val[$curr_key])) {
+								$val[$curr_key] = $curr_val;
 							}
-						} else { # is an object, iterate through it and parse
-							$this->parseTokensRecursive($iterator->getChildren());
-						}
+
+							return true;
+						}, [&$rec_ii, &$value]);
 
 					} else {
 						$value = $this->parseTokens($value);
@@ -147,20 +164,6 @@ class SuperObj extends \ArrayObject {
         return null;
     }
 
-
-	/**
-	 * Recursively parse any tokens within a data-structure
-	 * @param \RecursiveArrayIterator $iterator
-	 */
-	protected function parseTokensRecursive(\RecursiveArrayIterator &$iterator) {
-		foreach($iterator as $key => &$value) {
-			if($iterator->hasChildren()) {
-				$this->parseTokensRecursive($iterator->getChildren());
-			}
-		}
-	}
-
-
 	/**
 	 * Find and replace all tokens in a string
 	 * @param mixed $input Pass in the string or array to parse for variables
@@ -172,7 +175,12 @@ class SuperObj extends \ArrayObject {
 		if($tokens !== false) {
 			$tokens_mappings = [];
 			foreach($tokens as $t) {
-				$tokens_mappings[$t] = $this->get($t);
+
+				# If a token hasns't been found, then leave it intact, don't replace it
+				$val = $this->get($t);
+				if($val !== null) {
+					$tokens_mappings[$t] = $val;
+				}
 			}
 
 			$input = $this->replaceTokens($tokens_mappings, $input);

@@ -22,8 +22,8 @@
             "cdn-002.${testApplication.cdn_id}.cdn.com"
         ],
         "systems": [
-            {"id":"${testApplication.cdn.0}", "env": "${global.env}", "type": "server"},
-            {"id":"${testApplication.cdn.1}", "env": "${global.env}", "type": "server"},
+            {"id":"${testApplication.cdn_Id}", "env": "${global.env}", "type": "server"},
+            {"id":"${testApplication.cdn_id}", "env": "${global.env}", "type": "server"}
         ],
         "configuration": {
             "database": {
