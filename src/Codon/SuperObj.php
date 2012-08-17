@@ -40,16 +40,27 @@ class SuperObj extends \ArrayObject {
 
 	protected $_cache = [];
 	protected $_pathDelim = '.';
+
 	protected $_tokenStart = '${';
 	protected $_tokenEnd = '}';
+	protected $_tokenMappings = [];
 
 	/**
 	 * Construct something!
 	 * @param string $data
 	 */
 	public function __construct($data = '') {
-		parent::__construct($data, \ArrayObject::STD_PROP_LIST | \ArrayObject::ARRAY_AS_PROPS);
+		parent::__construct($data, \ArrayObject::STD_PROP_LIST);
 		$this->setIteratorClass('RecursiveArrayIterator');
+	}
+
+
+	/**
+	 * @param $path
+	 * @param $value
+	 */
+	public function set($path, $value) {
+
 	}
 
 
@@ -59,85 +70,107 @@ class SuperObj extends \ArrayObject {
 	 * @return mixed
 	 */
 	public function getPath($map) {
-		$map = explode($this->_pathDelim, $map);
-		return call_user_func_array([$this, 'get'], $map);
+		return $this->get($map);
 	}
-    
-    
+
+
     /**
-     * Pass
+     * Pass in the path
+	 * @return mixed
      */
     public function get() {
 
-		$map = func_get_args();
+		$tree = func_get_args();
+		$count = func_num_args();
+		if($count === 1) {
+			if(is_array($tree[0]))  # They passed in an array
+				$tree = $tree[0];
+			elseif(is_string($tree[0])) # Assume they passed in a path
+				$tree = explode($this->_pathDelim, $tree[0]);
+		}
 
         # Store the name reversed, it'll be faster to find among like-keys
-        $cached_name = strrev(implode('', $map));
+		# This is mostly useful for doing a ton of token-replacements which
+		# are found as single keys, but also for repeated-access
+        $cached_name = strrev(implode('', $tree));
         if(isset($this->_cache[$cached_name]))
             return $this->_cache[$cached_name];
 
-		$value = $this->findChild($this->getIterator(), $map);
+		$value = $this->findValue($this->getIterator(), $tree, $cached_name);
 
-		# Are there any tokens in this string?
-		$tokens = $this->findTokens($value);
-		if($tokens !== false) {
-			$token_mappings = [];
-			foreach($tokens as $t) {
-				$token_mappings[$t] = $this->getPath($t);
-			}
-
-			$value = $this->replaceTokens($token_mappings, $value);
-		}
-
-        $this->_cache[$cached_name] = &$value;
+		$this->_cache[$cached_name] = $value;
 
         return $value;
     }
 
 
 	/**
+	 * Returns an iterator of the current position
 	 * @param \RecursiveArrayIterator $iterator
 	 * @param array $tree
-	 * @return null
+	 * @return \RecursiveArrayIterator|null
 	 */
-	protected function findChild(\RecursiveArrayIterator $iterator, &$tree = []) {
-        
+	protected function &findValue(\RecursiveArrayIterator &$iterator, &$tree = []) {
+
         $find_key = array_shift($tree);
-        
+
         foreach($iterator as $key => &$value) {
-            if($key === $find_key) {          
+            if($key === $find_key) {
 				# found what we want
                 if(!isset($tree[0])) {
-                    return $value;
+
+                    if($iterator->hasChildren()) {
+						$this->parseTokensRecursive($iterator->getChildren());
+					} else {
+						$value = $this->parseTokens($value);
+					}
+
+					return $value;
                 }
-                # recurse in
-                return $this->findChild($iterator->getChildren(), $tree);
+
+                return $this->findValue($iterator->getChildren(), $tree);
             }
         }
-        
-        return null;        
+
+        return null;
     }
 
 
 	/**
-	 * Replace an array of tokens in a given string. Pass token
-	 * as name only, none of the ${/} that
-	 *
-	 * @param array $tokens Key=>value pairs of tokens and values
-	 * @param string $string String to replace in
-	 * @return string
+	 * Recursively parse any tokens within a data-structure
+	 * @param \RecursiveArrayIterator $iterator
 	 */
-	protected  function replaceTokens(array $tokens = [], $string) {
+	protected function parseTokensRecursive(\RecursiveArrayIterator &$iterator) {
+		foreach($iterator as $key => &$value) {
+			if($iterator->hasChildren()) {
+				$this->parseTokensRecursive($iterator->getChildren());
+			}
 
-		foreach($tokens as $key => $value) {
-			$string = str_replace(
-				$this->_tokenStart . $key . $this->_tokenEnd,
-				$value,
-				$string
-			);
+			echo "PARSING $key: "; print_r($value); echo "\n";
+			$value = $this->parseTokens($value);
+			echo "NEW VALUE: "; print_r($value); echo "\n";
+		}
+	}
+
+
+	/**
+	 * Find and replace all tokens in a string
+	 * @param mixed $input Pass in the string or array to parse for variables
+	 * @return mixed Returns same type that was passed in
+	 */
+	public function parseTokens($input) {
+
+		$tokens = $this->findTokens($input);
+		if($tokens !== false) {
+			$tokens_mappings = [];
+			foreach($tokens as $t) {
+				$tokens_mappings[$t] = $this->get($t);
+			}
+
+			$input = $this->replaceTokens($tokens_mappings, $input);
 		}
 
-		return $string;
+		return $input;
 	}
 
 
@@ -166,4 +199,25 @@ class SuperObj extends \ArrayObject {
 		return $matches;
     }
 
+
+	/**
+	 * Replace an array of tokens in a given string. Pass token
+	 * as name only, none of the ${/} that
+	 *
+	 * @param array $tokens Key=>value pairs of tokens and values
+	 * @param string $string String to replace in
+	 * @return string
+	 */
+	protected function replaceTokens(array $tokens = [], $string) {
+
+		foreach($tokens as $key => $value) {
+			$string = str_replace(
+				$this->_tokenStart . $key . $this->_tokenEnd,
+				$value,
+				$string
+			);
+		}
+
+		return $string;
+	}
 }

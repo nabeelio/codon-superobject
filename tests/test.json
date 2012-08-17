@@ -9,17 +9,18 @@
     },
     "php" : {
         "ini_set" : {
-            "display_errors" : "on"
+            "display_errors" : "On",
+            "date.timezone": "America/New_York"
         }
     },
     "testApplication": {
         "id" : "testapp-${global.env}",
         "baseURL" : "http://testsite.com",
         "cdn_id": "${testApplication.id}-cdn",
-        "cdn": {
-            "cdn001": "cdn-001.${application.cdn_id}.cdn.com",
-            "cdn002": "cdn-002.${application.cdn_id}.cdn.com"
-        },
+        "cdn": [
+            "cdn-001.${testApplication.cdn_id}.cdn.com",
+            "cdn-002.${testApplication.cdn_id}.cdn.com"
+        ],
         "configuration": {
             "database": {
                 "host": "localhost",

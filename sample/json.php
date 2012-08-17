@@ -12,8 +12,27 @@ $instance = \Codon\Config::loadDataJSON(file_get_contents(THIS_PATH . '/../tests
 #$value = $instance->get('testApplication', 'configuration', 'database', 'host');
 #var_dump($value);
 
-$value = $instance->get('paths', 'temp_path');
-var_dump($value);
+echo "=========================\n";
+echo "==== all paths ==========\n";
+echo "=========================\n";
 
-$value = \Codon\Config::getPath('testApplication.configuration.database.host');
-var_dump($value);
+#$value = $instance->get('paths');
+#var_dump($value);
+
+echo "=========================\n";
+echo "==== temp path ==========\n";
+echo "=========================\n";
+#$value = $instance->get('paths', 'temp_path');
+#var_dump($value);
+
+
+echo "=========================\n";
+echo "==== array values =======\n";
+echo "=========================\n";
+
+$value = $instance->get(['testApplication', 'cdn']);
+echo 'RETURNED VALUES: '; var_dump($value);
+
+
+#$value = \Codon\Config::getPath('testApplication.configuration.database.host');
+#var_dump($value);
