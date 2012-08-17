@@ -2,6 +2,11 @@
     "global" : {
         "env" : "dev"
     },
+    "paths": {
+        "root_path": "/var/www/webapp",
+        "upload_path": "${paths.root_path}/upload",
+        "temp_path": "${paths.root_path}/temp"
+    },
     "php" : {
         "ini_set" : {
             "display_errors" : "on"

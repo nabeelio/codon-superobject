@@ -39,6 +39,9 @@ namespace Codon;
 class SuperObj extends \ArrayObject {
 
 	protected $_cache = [];
+	protected $_pathDelim = '.';
+	protected $_tokenStart = '${';
+	protected $_tokenEnd = '}';
 
 	/**
 	 * Construct something!
@@ -55,8 +58,8 @@ class SuperObj extends \ArrayObject {
 	 * @param string $map The path to return
 	 * @return mixed
 	 */
-	public function map($map) {
-		$map = explode('.', $map);
+	public function getPath($map) {
+		$map = explode($this->_pathDelim, $map);
 		return call_user_func_array([$this, 'get'], $map);
 	}
     
@@ -74,6 +77,18 @@ class SuperObj extends \ArrayObject {
             return $this->_cache[$cached_name];
 
 		$value = $this->findChild($this->getIterator(), $map);
+
+		# Are there any tokens in this string?
+		$tokens = $this->findTokens($value);
+		if($tokens !== false) {
+			$token_mappings = [];
+			foreach($tokens as $t) {
+				$token_mappings[$t] = $this->getPath($t);
+			}
+
+			$value = $this->replaceTokens($token_mappings, $value);
+		}
+
         $this->_cache[$cached_name] = &$value;
 
         return $value;
@@ -91,28 +106,64 @@ class SuperObj extends \ArrayObject {
         
         foreach($iterator as $key => &$value) {
             if($key === $find_key) {          
-
-                # We are at the base of what we want
+				# found what we want
                 if(!isset($tree[0])) {
                     return $value;
                 }
-                
-                # Go 
+                # recurse in
                 return $this->findChild($iterator->getChildren(), $tree);
             }
         }
         
         return null;        
     }
-    
-    
-    protected function findTokens($string) {
-        
+
+
+	/**
+	 * Replace an array of tokens in a given string. Pass token
+	 * as name only, none of the ${/} that
+	 *
+	 * @param array $tokens Key=>value pairs of tokens and values
+	 * @param string $string String to replace in
+	 * @return string
+	 */
+	protected  function replaceTokens(array $tokens = [], $string) {
+
+		foreach($tokens as $key => $value) {
+			$string = str_replace(
+				$this->_tokenStart . $key . $this->_tokenEnd,
+				$value,
+				$string
+			);
+		}
+
+		return $string;
+	}
+
+
+	/**
+	 * Find any tokens that exist inside of a string
+	 * @param string $string The string to search on
+	 * @return array|bool
+	 */
+	protected function findTokens($string) {
+
+		$start = strpos($string, $this->_tokenStart);
+		if($start === false) {
+			return false;
+		}
+
+		$matches = [];
+		while(1) {
+			$end = strpos($string, $this->_tokenEnd, $start);
+			$matches[] = substr($string, $start + 2, ($end - $start - 2));
+			$start = strpos($string, $this->_tokenStart, $end);
+
+			if($start === false)
+				break;
+		}
+
+		return $matches;
     }
-    
-    
-    protected function replaceTokens(array $tokens = [], $string) {
-        
-        
-    }
+
 }
