@@ -36,6 +36,11 @@
 
 namespace Codon;
 
+/**
+ * @TODO
+ *
+ * Parse testApplications.systems
+ */
 class SuperObj extends \ArrayObject {
 
 	protected $_cache = [];
@@ -120,7 +125,14 @@ class SuperObj extends \ArrayObject {
                 if(!isset($tree[0])) {
 
                     if($iterator->hasChildren()) {
-						$this->parseTokensRecursive($iterator->getChildren());
+						if(is_array($value)) { # returning an array
+							foreach($value as &$v) {
+								$v = $this->parseTokens($v);
+							}
+						} else { # is an object, iterate through it and parse
+							$this->parseTokensRecursive($iterator->getChildren());
+						}
+
 					} else {
 						$value = $this->parseTokens($value);
 					}
@@ -145,10 +157,6 @@ class SuperObj extends \ArrayObject {
 			if($iterator->hasChildren()) {
 				$this->parseTokensRecursive($iterator->getChildren());
 			}
-
-			echo "PARSING $key: "; print_r($value); echo "\n";
-			$value = $this->parseTokens($value);
-			echo "NEW VALUE: "; print_r($value); echo "\n";
 		}
 	}
 

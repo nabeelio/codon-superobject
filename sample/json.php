@@ -16,7 +16,7 @@ echo "=========================\n";
 echo "==== all paths ==========\n";
 echo "=========================\n";
 
-#$value = $instance->get('paths');
+$value = $instance->get('paths');
 #var_dump($value);
 
 echo "=========================\n";
