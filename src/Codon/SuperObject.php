@@ -115,13 +115,17 @@ class SuperObject extends \ArrayObject {
 		$tree = func_get_args();
 		$count = func_num_args();
 		if($count === 1) {
-			# They passed in an array, so assume this is our list
-			if(is_array($tree[0])) {
+			if(is_array($tree[0])) { # They passed in an array, so assume this is our list
 				$tree = $tree[0];
-			}
-			# Passed in a string, assume this is a path
-			elseif(is_string($tree[0])) {# Assume they passed in a path
-				$tree = explode($this->_pathDelim, $tree[0]);
+			} elseif(is_string($tree[0])) { # Passed in a string, assume this is a path
+				# explode based on the type of delimiter (custom, . or /)
+				if(strpos($tree[0], $this->_pathDelim) !== false) {
+					$tree = explode($this->_pathDelim, $tree[0]);
+				} elseif(strpos($tree[0], '.') !== false) {
+					$tree = explode('.', $tree[0]);
+				} elseif(strpos($tree[0], '/') !== false) {
+					$tree = explode('/', $tree[0]);
+				}
 			}
 		}
 
