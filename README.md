@@ -1,4 +1,4 @@
-codon-jsonconfig
+codon-superobject
 ================
 
 A class for parsing and using JSON for config files

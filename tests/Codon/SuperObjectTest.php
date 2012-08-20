@@ -1,7 +1,7 @@
 <?php
 
 define('THIS_PATH', dirname(__FILE__));
-include THIS_PATH . '/../../src/Codon/SuperObj.php';
+include THIS_PATH . '/../../src/Codon/SuperObject.php';
 
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
@@ -14,7 +14,7 @@ ini_set('date.timezone', 'America/New_York');
 class SuperObjTest  extends PHPUnit_Framework_TestCase {
 
 	public function init() {
-		return new \Codon\SuperObj(json_decode(file_get_contents(
+		return new \Codon\SuperObject(json_decode(file_get_contents(
 			THIS_PATH . '/../test.json'
 		)));
 	}

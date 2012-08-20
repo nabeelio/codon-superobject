@@ -36,7 +36,7 @@
 
 namespace Codon;
 
-class SuperObj extends \ArrayObject {
+class SuperObject extends \ArrayObject {
 
 	protected $_cache = [];
 	protected $_pathDelim = '.';
@@ -50,7 +50,7 @@ class SuperObj extends \ArrayObject {
 	 * @param string $data
 	 */
 	public function __construct($data = '') {
-		parent::__construct($data, \ArrayObject::STD_PROP_LIST);
+		parent::__construct($data, \ArrayObject::STD_PROP_LIST | \ArrayObject::ARRAY_AS_PROPS);
 		$this->setIteratorClass('RecursiveArrayIterator');
 	}
 
