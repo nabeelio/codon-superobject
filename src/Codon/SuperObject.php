@@ -39,6 +39,7 @@ namespace Codon;
 class SuperObject extends \ArrayObject {
 
 	protected $_cache = [];
+	protected $_cachePaths = [];
 	protected $_pathDelim = '.';
 
 	protected $_tokenStart = '${';
@@ -114,24 +115,34 @@ class SuperObject extends \ArrayObject {
 
 		$tree = func_get_args();
 		$count = func_num_args();
+
 		if($count === 1) {
 			if(is_array($tree[0])) { # They passed in an array, so assume this is our list
 				$tree = $tree[0];
 			} elseif(is_string($tree[0])) { # Passed in a string, assume this is a path
-				# explode based on the type of delimiter (custom, . or /)
-				if(strpos($tree[0], $this->_pathDelim) !== false) {
-					$tree = explode($this->_pathDelim, $tree[0]);
-				} elseif(strpos($tree[0], '.') !== false) {
-					$tree = explode('.', $tree[0]);
-				} elseif(strpos($tree[0], '/') !== false) {
-					$tree = explode('/', $tree[0]);
+
+				$path = &$tree[0];
+
+				# see if we already tried to get this path, if-so, just pull it from the cache
+				$tree = $this->getCached('cache_' . $path);
+				if($tree === null) {
+					# explode based on the type of delimiter (custom, . or /)
+					if(strpos($path, '.') !== false) {
+						$tree = explode('.', $path);
+					} elseif(strpos($path, '/') !== false) {
+						$tree = explode('/', $path);
+					} else {
+						$tree = explode($this->_pathDelim, $path);
+					}
+
+					$this->saveCache('cache_' . $path, $tree);
 				}
 			}
 		}
 
 		$tree_key = implode('.', $tree);
 
-		# Check to see if we have a copy of this key cached already
+		# Check to see if we the value for this key saved already
         $value = $this->getCached($tree_key);
 		if($value !== null)
 			return $value;
@@ -148,23 +159,22 @@ class SuperObject extends \ArrayObject {
 	/**
 	 * Return a cached copy of a given key string. Stores the key name
 	 * as a reversed string, for a faster lookup time (esp for nested-sets)
+	 * @TODO: Plug into caching layer
 	 * @param string $key_name
 	 * @return mixed
 	 */
 	public function getCached($key_name) {
-
 		$key_name = strrev($key_name);
-
 		if(isset($this->_cache[$key_name])) {
 			return $this->_cache[$key_name];
 		}
-
 		return null;
 	}
 
 
 	/**
 	 * Save a copy of the key to the cache
+	 * @TODO: Plug into caching layer
 	 * @param $key_name
 	 * @param $value
 	 */
